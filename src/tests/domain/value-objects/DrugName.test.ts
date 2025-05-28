@@ -7,44 +7,44 @@ describe('DrugName', () => {
     });
 
     it('should be instantiable with valid parameters', () => {
-      const drugName = DrugName.create('Dupixent');
+      const drugName = new DrugName('Dupixent');
       expect(drugName).toBeInstanceOf(DrugName);
     });
 
     it('should throw error for empty name', () => {
-      expect(() => DrugName.create('')).toThrow('Drug name cannot be empty');
-      expect(() => DrugName.create('   ')).toThrow('Drug name cannot be empty');
+      expect(() => new DrugName('')).toThrow('Drug name cannot be empty');
+      expect(() => new DrugName('   ')).toThrow('Drug name cannot be empty');
     });
 
     it('should trim whitespace', () => {
-      const drugName = DrugName.create('  Dupixent  ');
+      const drugName = new DrugName('  Dupixent  ');
       expect(drugName.getValue()).toBe('Dupixent');
     });
   });
 
   describe('getters', () => {
     it('should return correct value', () => {
-      const drugName = DrugName.create('Dupixent');
+      const drugName = new DrugName('Dupixent');
       expect(drugName.getValue()).toBe('Dupixent');
     });
   });
 
   describe('equals', () => {
     it('should return true for equal drug names', () => {
-      const drugName1 = DrugName.create('Dupixent');
-      const drugName2 = DrugName.create('Dupixent');
+      const drugName1 = new DrugName('Dupixent');
+      const drugName2 = new DrugName('Dupixent');
       expect(drugName1.equals(drugName2)).toBe(true);
     });
 
     it('should return false for different drug names', () => {
-      const drugName1 = DrugName.create('Dupixent');
-      const drugName2 = DrugName.create('Other Drug');
+      const drugName1 = new DrugName('Dupixent');
+      const drugName2 = new DrugName('Other Drug');
       expect(drugName1.equals(drugName2)).toBe(false);
     });
 
     it('should return false for different case', () => {
-      const drugName1 = DrugName.create('Dupixent');
-      const drugName2 = DrugName.create('DUPIXENT');
+      const drugName1 = new DrugName('Dupixent');
+      const drugName2 = new DrugName('DUPIXENT');
       expect(drugName1.equals(drugName2)).toBe(false);
     });
   });
