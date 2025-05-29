@@ -1,4 +1,4 @@
-import { EmptyIdentificationCodeError, InvalidUUIDError } from '@/domain/errors';
+import { InvalidUUIDError } from '@/domain/errors';
 
 export class IdentificationCode {
   private static readonly UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -8,10 +8,6 @@ export class IdentificationCode {
   }
 
   validate(value: string): void {
-    if (!value || value.trim().length === 0) {
-      throw new EmptyIdentificationCodeError();
-    }
-
     const trimmedValue = value.trim();
     if (!IdentificationCode.UUID_REGEX.test(trimmedValue)) {
       throw new InvalidUUIDError();
@@ -26,7 +22,4 @@ export class IdentificationCode {
     return this.value.toLowerCase() === other.value.toLowerCase();
   }
 
-  static create(value: string): IdentificationCode {
-    return new IdentificationCode(value);
-  }
 }

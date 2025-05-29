@@ -1,3 +1,5 @@
+import { EmptyDrugNameError } from "../errors/EmptyDrugNameError";
+
 export class DrugName {
   constructor(private readonly value: string) {
     this.value = value.trim();
@@ -6,7 +8,7 @@ export class DrugName {
 
   validate(name: string): void {
     if (!name || name.trim().length === 0) {
-      throw new Error('Drug name cannot be empty');
+      throw new EmptyDrugNameError();
     }
   }
 
