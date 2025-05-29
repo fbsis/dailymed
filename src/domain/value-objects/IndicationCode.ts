@@ -1,6 +1,5 @@
 export class IndicationCode {
   constructor(private readonly value: string) {
-    this.value = value.trim();
     this.validate(value);
   }
 

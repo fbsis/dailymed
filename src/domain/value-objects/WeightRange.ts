@@ -33,11 +33,4 @@ export class WeightRange {
     return `${this.minWeight} to ${this.maxWeight} ${this.unit}`;
   }
 
-  equals(other: WeightRange): boolean {
-    return (
-      this.minWeight === other.minWeight &&
-      this.maxWeight === other.maxWeight &&
-      this.unit === other.unit
-    );
-  }
 } 
