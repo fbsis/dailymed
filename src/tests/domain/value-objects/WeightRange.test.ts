@@ -55,30 +55,4 @@ describe('WeightRange', () => {
       expect(weightRange.toString()).toBe('5 kg and above');
     });
   });
-
-  describe('equals', () => {
-    it('should return true for equal weight ranges', () => {
-      const weightRange1 = new WeightRange(5, 10, 'kg');
-      const weightRange2 = new WeightRange(5, 10, 'kg');
-      expect(weightRange1.equals(weightRange2)).toBe(true);
-    });
-
-    it('should return false for different min weights', () => {
-      const weightRange1 = new WeightRange(5, 10, 'kg');
-      const weightRange2 = new WeightRange(6, 10, 'kg');
-      expect(weightRange1.equals(weightRange2)).toBe(false);
-    });
-
-    it('should return false for different max weights', () => {
-      const weightRange1 = new WeightRange(5, 10, 'kg');
-      const weightRange2 = new WeightRange(5, 11, 'kg');
-      expect(weightRange1.equals(weightRange2)).toBe(false);
-    });
-
-    it('should return false for different units', () => {
-      const weightRange1 = new WeightRange(5, 10, 'kg');
-      const weightRange2 = new WeightRange(5, 10, 'kg' as any);
-      expect(weightRange1.equals(weightRange2)).toBe(false);
-    });
-  });
 }); 

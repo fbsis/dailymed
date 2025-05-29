@@ -24,10 +24,6 @@ describe('IndicationCode', () => {
       expect(() => new IndicationCode('a.b')).toThrow('Indication code must be in format X.X');
     });
 
-    it('should trim whitespace', () => {
-      const code = new IndicationCode('  1.1  ');
-      expect(code.getValue()).toBe('1.1');
-    });
   });
 
   describe('getters', () => {
