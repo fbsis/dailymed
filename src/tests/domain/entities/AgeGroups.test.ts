@@ -115,4 +115,77 @@ describe('AgeGroups', () => {
       expect(() => ageGroups.getDosageForAgeAndWeight(13, 'months', 7)).toThrow(DosageNotFoundError);
     });
   });
+
+  describe('error handling', () => {
+    it('should throw EmptyDosageListError when no dosages provided', () => {
+      expect(() => new AgeGroups([])).toThrow(EmptyDosageListError);
+    });
+
+    it('should throw DosageNotFoundError for age at last range boundary', () => {
+      const ageRange = new AgeRange(0, 12, 'years');
+      const weightRange = new WeightRange(5, 10, 'kg');
+      const dosageValue = new DosageValue('300 mg');
+      const weightBasedDosages = new Map([[weightRange, dosageValue]]);
+      const ageBasedDosage = new AgeBasedDosage(ageRange, weightBasedDosages);
+      const ageGroups = new AgeGroups([ageBasedDosage]);
+
+      // Should throw for age above max
+      expect(() => ageGroups.getDosageForAgeAndWeight(13, 'years', 7)).toThrow(DosageNotFoundError);
+    });
+
+    it('should handle last range with max age correctly', () => {
+      const ageRange1 = new AgeRange(0, 12, 'years');
+      const ageRange2 = new AgeRange(12, 17, 'years');
+      const weightRange = new WeightRange(5, 10, 'kg');
+      const dosageValue = new DosageValue('300 mg');
+      const weightBasedDosages = new Map([[weightRange, dosageValue]]);
+      
+      const ageBasedDosage1 = new AgeBasedDosage(ageRange1, weightBasedDosages);
+      const ageBasedDosage2 = new AgeBasedDosage(ageRange2, weightBasedDosages);
+      const ageGroups = new AgeGroups([ageBasedDosage1, ageBasedDosage2]);
+
+      // Should return last dosage for max age
+      expect(ageGroups.getDosageForAgeAndWeight(17, 'years', 7)).toBe(ageBasedDosage2);
+      
+      // Should throw for age above max
+      expect(() => ageGroups.getDosageForAgeAndWeight(18, 'years', 7)).toThrow(DosageNotFoundError);
+    });
+
+    it('should handle last range with different age unit', () => {
+      const ageRange1 = new AgeRange(0, 12, 'months');
+      const ageRange2 = new AgeRange(1, 12, 'years');
+      const weightRange = new WeightRange(5, 10, 'kg');
+      const dosageValue = new DosageValue('300 mg');
+      const weightBasedDosages = new Map([[weightRange, dosageValue]]);
+      
+      const ageBasedDosage1 = new AgeBasedDosage(ageRange1, weightBasedDosages);
+      const ageBasedDosage2 = new AgeBasedDosage(ageRange2, weightBasedDosages);
+      const ageGroups = new AgeGroups([ageBasedDosage1, ageBasedDosage2]);
+
+      // Should return last dosage for max age in years
+      expect(ageGroups.getDosageForAgeAndWeight(12, 'years', 7)).toBe(ageBasedDosage2);
+      
+      // Should throw for age above max in years
+      expect(() => ageGroups.getDosageForAgeAndWeight(13, 'years', 7)).toThrow(DosageNotFoundError);
+      
+      // Should throw for age in months when last range is in years
+      expect(() => ageGroups.getDosageForAgeAndWeight(13, 'months', 7)).toThrow(DosageNotFoundError);
+    });
+
+    it('should handle last range with null max age', () => {
+      const ageRange1 = new AgeRange(0, 12, 'years');
+      const ageRange2 = new AgeRange(12, null, 'years');
+      const weightRange = new WeightRange(5, 10, 'kg');
+      const dosageValue = new DosageValue('300 mg');
+      const weightBasedDosages = new Map([[weightRange, dosageValue]]);
+      
+      const ageBasedDosage1 = new AgeBasedDosage(ageRange1, weightBasedDosages);
+      const ageBasedDosage2 = new AgeBasedDosage(ageRange2, weightBasedDosages);
+      const ageGroups = new AgeGroups([ageBasedDosage1, ageBasedDosage2]);
+
+      // Should return last dosage for any age above min
+      expect(ageGroups.getDosageForAgeAndWeight(20, 'years', 7)).toBe(ageBasedDosage2);
+      expect(ageGroups.getDosageForAgeAndWeight(30, 'years', 7)).toBe(ageBasedDosage2);
+    });
+  });
 }); 
