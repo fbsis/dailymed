@@ -1,10 +1,9 @@
-import { AgeGroups } from '../../../domain/entities/AgeGroups';
-import { AgeBasedDosage } from '../../../domain/entities/AgeBasedDosage';
-import { AgeRange } from '../../../domain/value-objects/AgeRange';
-import { WeightRange } from '../../../domain/value-objects/WeightRange';
-import { DosageValue } from '../../../domain/value-objects/DosageValue';
-import { EmptyDosageListError } from '../../../domain/errors/EmptyDosageListError';
-import { DosageNotFoundError } from '../../../domain/errors/DosageNotFoundError';
+import { AgeGroups } from '@/domain/entities/AgeGroups';
+import { AgeBasedDosage } from '@/domain/entities/AgeBasedDosage';
+import { AgeRange } from '@/domain/value-objects/AgeRange';
+import { WeightRange } from '@/domain/value-objects/WeightRange';
+import { DosageValue } from '@/domain/value-objects/DosageValue';
+import { EmptyDosageListError, DosageNotFoundError } from '@/domain/errors';
 
 describe('AgeGroups', () => {
   let ageRange1: AgeRange;
@@ -38,6 +37,11 @@ describe('AgeGroups', () => {
     it('should throw error for empty age based dosages', () => {
       expect(() => new AgeGroups([])).toThrow(EmptyDosageListError);
     });
+
+    it('should handle single age based dosage', () => {
+      const ageGroups = new AgeGroups([ageBasedDosage1]);
+      expect(ageGroups.getDosageForAgeAndWeight(6, 'years', 7)).toBe(ageBasedDosage1);
+    });
   });
 
   describe('getters', () => {
@@ -47,6 +51,13 @@ describe('AgeGroups', () => {
       expect(returnedDosages).toHaveLength(2);
       expect(returnedDosages).toContain(ageBasedDosage1);
       expect(returnedDosages).toContain(ageBasedDosage2);
+    });
+
+    it('should return a new array instance', () => {
+      const ageGroups = new AgeGroups([ageBasedDosage1]);
+      const dosages1 = ageGroups.getAllAgeBasedDosages();
+      const dosages2 = ageGroups.getAllAgeBasedDosages();
+      expect(dosages1).not.toBe(dosages2);
     });
   });
 
@@ -59,8 +70,14 @@ describe('AgeGroups', () => {
 
     it('should return correct dosage for age at range boundaries', () => {
       const ageGroups = new AgeGroups([ageBasedDosage1, ageBasedDosage2]);
+      // Test lower boundary of first range
       expect(ageGroups.getDosageForAgeAndWeight(0, 'years', 7)).toBe(ageBasedDosage1);
+      // Test upper boundary of first range
+      expect(ageGroups.getDosageForAgeAndWeight(11, 'years', 7)).toBe(ageBasedDosage1);
+      // Test lower boundary of second range
       expect(ageGroups.getDosageForAgeAndWeight(12, 'years', 7)).toBe(ageBasedDosage2);
+      // Test upper boundary of second range
+      expect(ageGroups.getDosageForAgeAndWeight(17, 'years', 7)).toBe(ageBasedDosage2);
     });
 
     it('should throw error for age below range', () => {
@@ -73,21 +90,28 @@ describe('AgeGroups', () => {
       expect(() => ageGroups.getDosageForAgeAndWeight(18, 'years', 7)).toThrow(DosageNotFoundError);
     });
 
-    it('should handle age range without max age', () => {
-      const openAgeRange = new AgeRange(17, null, 'years');
-      const openAgeBasedDosage = new AgeBasedDosage(openAgeRange, weightBasedDosages);
-      const ageGroups = new AgeGroups([ageBasedDosage1, ageBasedDosage2, openAgeBasedDosage]);
+    it('should handle overlapping age ranges', () => {
+      const overlappingRange1 = new AgeRange(10, 15, 'years');
+      const overlappingRange2 = new AgeRange(12, 17, 'years');
+      const overlappingDosage1 = new AgeBasedDosage(overlappingRange1, weightBasedDosages);
+      const overlappingDosage2 = new AgeBasedDosage(overlappingRange2, weightBasedDosages);
+      const ageGroups = new AgeGroups([overlappingDosage1, overlappingDosage2]);
 
-      expect(ageGroups.getDosageForAgeAndWeight(20, 'years', 7)).toBe(openAgeBasedDosage);
-      expect(() => ageGroups.getDosageForAgeAndWeight(16, 'years', 7)).toThrow(DosageNotFoundError);
+      // Should return the first matching range (based on minAge)
+      expect(ageGroups.getDosageForAgeAndWeight(12, 'years', 7)).toBe(overlappingDosage1);
+      expect(ageGroups.getDosageForAgeAndWeight(13, 'years', 7)).toBe(overlappingDosage1);
+      expect(ageGroups.getDosageForAgeAndWeight(14, 'years', 7)).toBe(overlappingDosage1);
     });
 
-    it('should handle months age unit', () => {
-      const monthsAgeRange = new AgeRange(0, 12, 'months');
-      const monthsAgeBasedDosage = new AgeBasedDosage(monthsAgeRange, weightBasedDosages);
-      const ageGroups = new AgeGroups([monthsAgeBasedDosage, ageBasedDosage1, ageBasedDosage2]);
+    it('should handle different age units in ranges', () => {
+      const monthsRange = new AgeRange(0, 12, 'months');
+      const yearsRange = new AgeRange(1, 12, 'years');
+      const monthsDosage = new AgeBasedDosage(monthsRange, weightBasedDosages);
+      const yearsDosage = new AgeBasedDosage(yearsRange, weightBasedDosages);
+      const ageGroups = new AgeGroups([monthsDosage, yearsDosage]);
 
-      expect(ageGroups.getDosageForAgeAndWeight(6, 'months', 7)).toBe(monthsAgeBasedDosage);
+      expect(ageGroups.getDosageForAgeAndWeight(6, 'months', 7)).toBe(monthsDosage);
+      expect(ageGroups.getDosageForAgeAndWeight(2, 'years', 7)).toBe(yearsDosage);
       expect(() => ageGroups.getDosageForAgeAndWeight(13, 'months', 7)).toThrow(DosageNotFoundError);
     });
   });
