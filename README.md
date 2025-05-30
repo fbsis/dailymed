@@ -2,6 +2,15 @@
 
 A RESTful API for managing drug information with user authentication and role-based access control.
 
+## Development with Dev Container
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/products/docker-desktop)
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VS Code extension
+
+
 ## System Architecture
 
 ```mermaid
@@ -143,6 +152,129 @@ graph TD
 
 ## Development Setup
 
+1. **Clone the repository and open in VS Code**
+```bash
+git clone <repository-url>
+cd dailymed
+code .
+```
+
+2. **Open in Dev Container**
+   - When VS Code opens, click "Reopen in Container" in the notification
+   - Or use the command palette (F1) and select "Remote-Containers: Reopen in Container"
+   - Wait for the container to build (first time only)
+
+3. **Dev Container Features**
+   - Pre-configured development environment
+   - MongoDB and Redis services included
+   - Node.js and npm pre-installed
+   - Git, curl, and other development tools
+   - VS Code extensions pre-installed:
+     - ESLint
+     - Prettier
+     - Jest Runner
+     - MongoDB for VS Code
+     - Docker
+
+4. **Available Services**
+   - API Server: `http://localhost:3000`
+   - MongoDB: `mongodb://localhost:27017`
+   - Redis: `redis://localhost:6379`
+   - MongoDB Express (Web UI): `http://localhost:8081`
+
+5. **Development Workflow**
+   ```bash
+   # Inside the container
+   npm install          # Install dependencies
+   npm run dev         # Start development server
+   npm test           # Run tests
+   npm run lint       # Run linter
+   ```
+
+6. **Environment Variables**
+   - Dev container automatically sets up environment variables
+   - `.devcontainer/devcontainer.env` contains development settings
+   - Override in `.env` for local development
+
+7. **Debugging**
+   - Use VS Code's debug panel
+   - Breakpoints work out of the box
+   - Node.js debugging configured
+   - MongoDB and Redis debugging tools included
+
+8. **Database Management**
+   - MongoDB Express available at `http://localhost:8081`
+   - Default credentials:
+     - Username: `admin`
+     - Password: `pass`
+   - Redis Commander available at `http://localhost:8082`
+
+9. **Useful Commands**
+   ```bash
+   # Rebuild container
+   Command Palette (F1) -> "Remote-Containers: Rebuild Container"
+
+   # View logs
+   docker-compose logs -f
+
+   # Restart services
+   docker-compose restart
+
+   # Access MongoDB shell
+   docker-compose exec mongodb mongosh
+
+   # Access Redis CLI
+   docker-compose exec redis redis-cli
+   ```
+
+10. **Troubleshooting**
+    - If container fails to build:
+      ```bash
+      # Clean Docker
+      docker system prune -a
+      # Rebuild
+      docker-compose build --no-cache
+      ```
+    - If services are not accessible:
+      ```bash
+      # Check service status
+      docker-compose ps
+      # View service logs
+      docker-compose logs [service-name]
+      ```
+
+### Dev Container Configuration
+
+The development container is configured in `.devcontainer/devcontainer.json`:
+
+```json
+{
+  "name": "DailyMed Development",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "api",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-tslint-plugin",
+        "mongodb.mongodb-vscode",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        }
+      }
+    }
+  },
+  "forwardPorts": [3000, 8081, 8082],
+  "postCreateCommand": "npm install"
+}
+```
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
@@ -193,54 +325,110 @@ The server will start at `http://localhost:3000` (or the port specified in your 
 ## Testing
 
 ### Test Flow Diagram
+--------------------------------|---------|----------|---------|---------|--------------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s        
+--------------------------------|---------|----------|---------|---------|--------------------------
+All files                       |   73.27 |    65.83 |   75.86 |    73.6 |                          
+ domain/entities                |   96.47 |    88.88 |     100 |     100 |                          
+  AgeBasedDosage.ts             |     100 |      100 |     100 |     100 |                          
+  AgeGroups.ts                  |   89.65 |    86.36 |     100 |     100 | 19,23-30                 
+  Dosage.ts                     |     100 |      100 |     100 |     100 |                          
+  Drug.ts                       |     100 |      100 |     100 |     100 |                          
+  Indication.ts                 |     100 |      100 |     100 |     100 |                          
+  User.ts                       |     100 |      100 |     100 |     100 |                          
+  WeightBasedDosage.ts          |     100 |      100 |     100 |     100 |                          
+ domain/errors                  |     100 |      100 |     100 |     100 |                          
+  DomainError.ts                |     100 |      100 |     100 |     100 |                          
+  DosageNotFoundError.ts        |     100 |      100 |     100 |     100 |                          
+  DrugNotFoundError.ts          |     100 |      100 |     100 |     100 |                          
+  EmptyConditionError.ts        |     100 |      100 |     100 |     100 |                          
+  EmptyDosageListError.ts       |     100 |      100 |     100 |     100 |                          
+  EmptyDrugNameError.ts         |     100 |      100 |     100 |     100 |                          
+  InvalidAgeRangeError.ts       |     100 |      100 |     100 |     100 |                          
+  InvalidCredentialsError.ts    |     100 |      100 |     100 |     100 |                          
+  InvalidDosageError.ts         |     100 |      100 |     100 |     100 |                          
+  InvalidUUIDError.ts           |     100 |      100 |     100 |     100 |                          
+  InvalidWeightRangeError.ts    |     100 |      100 |     100 |     100 |                          
+  ShortConditionError.ts        |     100 |      100 |     100 |     100 |                          
+  UserAlreadyExistsError.ts     |     100 |      100 |     100 |     100 |                          
+  index.ts                      |     100 |      100 |     100 |     100 |                          
+ domain/use-cases               |     100 |      100 |     100 |     100 |                          
+  CreateDrugUseCase.ts          |     100 |      100 |     100 |     100 |                          
+  DeleteDrugUseCase.ts          |     100 |      100 |     100 |     100 |                          
+  GetDrugUseCase.ts             |     100 |      100 |     100 |     100 |                          
+  UpdateDrugUseCase.ts          |     100 |      100 |     100 |     100 |                          
+ domain/value-objects           |     100 |      100 |     100 |     100 |                          
+  AgeRange.ts                   |     100 |      100 |     100 |     100 |                          
+  Condition.ts                  |     100 |      100 |     100 |     100 |                          
+  Description.ts                |     100 |      100 |     100 |     100 |                          
+  DosageValue.ts                |     100 |      100 |     100 |     100 |                          
+  DrugName.ts                   |     100 |      100 |     100 |     100 |                          
+  Email.ts                      |     100 |      100 |     100 |     100 |                          
+  IdentificationCode.ts         |     100 |      100 |     100 |     100 |                          
+  IndicationCode.ts             |     100 |      100 |     100 |     100 |                          
+  Password.ts                   |     100 |      100 |     100 |     100 |                          
+  UserName.ts                   |     100 |      100 |     100 |     100 |                          
+  UserRole.ts                   |     100 |      100 |     100 |     100 |                          
+  WeightRange.ts                |     100 |      100 |     100 |     100 |                          
+ infra/cache                    |     100 |      100 |     100 |     100 |                          
+  RedisCacheService.ts          |     100 |      100 |     100 |     100 |                          
+ infra/config                   |   95.34 |       60 |   71.42 |   94.44 |                          
+  database.ts                   |     100 |      100 |     100 |     100 |                          
+  queue.ts                      |     100 |      100 |     100 |     100 |                          
+  redis.ts                      |      80 |    33.33 |   33.33 |   71.42 | 10,16                    
+ infra/http                     |     100 |      100 |     100 |     100 |                          
+  httpClient.ts                 |     100 |      100 |     100 |     100 |                          
+ infra/mappers                  |     100 |       75 |     100 |     100 |                          
+  DrugMapper.ts                 |     100 |       75 |     100 |     100 | 50                       
+ infra/middleware               |       0 |        0 |       0 |       0 |                          
+  authMiddleware.ts             |       0 |        0 |       0 |       0 | 12-57                    
+ infra/models                   |     100 |      100 |     100 |     100 |                          
+  DrugModel.ts                  |     100 |      100 |     100 |     100 |                          
+  UserModel.ts                  |     100 |      100 |     100 |     100 |                          
+ infra/queue                    |      95 |      100 |      50 |      95 |                          
+  bull-board.ts                 |      95 |      100 |      50 |      95 | 30                       
+ infra/queue/processors         |   84.37 |       25 |      50 |   84.37 |                          
+  aiConsultationProcessor.ts    |      88 |       25 |      60 |      88 | 78,98-100                
+  dailyMedProcessor.ts          |   71.42 |      100 |   33.33 |   71.42 | 21-25                    
+ infra/queue/workers            |       0 |      100 |       0 |       0 |                          
+  dailyMedWorker.ts             |       0 |      100 |       0 |       0 | 1-20                     
+ infra/repositories/mongoose    |   51.72 |       75 |   55.55 |   53.57 |                          
+  DrugRepository.ts             |     100 |      100 |     100 |     100 |                          
+  UserRepository.ts             |       0 |        0 |       0 |       0 | 1-44                     
+ infra/services                 |   36.84 |    19.04 |   19.35 |   36.84 |                          
+  AIConsultationQueueService.ts |   27.77 |        0 |       0 |   27.77 | 14-42                    
+  AIConsultationService.ts      |   11.11 |      100 |       0 |   11.11 | 11-75                    
+  AuthService.ts                |       0 |        0 |       0 |       0 | 2-107                    
+  DailyMedQueueService.ts       |   46.15 |        0 |   33.33 |   46.15 | 42-45,53-56,64-65,73-114 
+  DailyMedService.ts            |   44.44 |      100 |       0 |   44.44 | 11-24                    
+  JWTService.ts                 |       0 |        0 |       0 |       0 | 1-32                     
+  dailyMedApi.ts                |     100 |       80 |     100 |     100 | 36                       
+ infra/workers                  |     100 |      100 |     100 |     100 |                          
+  aiConsultationWorker.ts       |     100 |      100 |     100 |     100 |                          
+ presentation/api               |   89.28 |    33.33 |     100 |   89.28 |                          
+  app.ts                        |     100 |      100 |     100 |     100 |                          
+  server.ts                     |   78.57 |    33.33 |     100 |   78.57 | 15-16,22                 
+ presentation/api/config        |     100 |      100 |     100 |     100 |                          
+  swagger.ts                    |     100 |      100 |     100 |     100 |                          
+ presentation/api/controllers   |   61.79 |        0 |    62.5 |   61.79 |                          
+  AuthController.ts             |       0 |        0 |       0 |       0 | 3-93                     
+  DrugController.ts             |     100 |      100 |     100 |     100 |                          
+  DrugCreateController.ts       |     100 |      100 |     100 |     100 |                          
+ presentation/api/middleware    |   65.78 |    22.22 |   71.42 |   67.64 |                          
+  errorHandler.ts               |       0 |        0 |       0 |       0 | 2-33                     
+  validation.ts                 |   96.15 |      100 |     100 |   95.83 | 57                       
+ presentation/api/routes        |       0 |      100 |       0 |       0 |                          
+  authRoutes.ts                 |       0 |      100 |       0 |       0 | 1-124                    
+ presentation/api/validations   |   95.83 |      100 |     100 |   95.45 |                          
+  drugValidation.ts             |   95.83 |      100 |     100 |   95.45 | 42                       
+ tests                          |       0 |      100 |       0 |       0 |                          
+  setup.ts                      |       0 |      100 |       0 |       0 | 2-24                     
+--------------------------------|---------|----------|---------|---------|--------------------------
 
-```mermaid
-graph TD
-    A[Test Suite] --> B[describe block]
-    B --> C[beforeEach]
-    B --> D[it blocks]
-    B --> E[afterEach]
-    
-    D --> F[Individual Tests]
-    F --> G[expect assertions]
-    
-    subgraph "Test Structure"
-        H[Setup] --> I[Action]
-        I --> J[Assertion]
-    end
-    
-    subgraph "Value Object Tests"
-        K[Email Tests] --> L[Valid Email]
-        K --> M[Invalid Email]
-        K --> N[Email Equality]
-        
-        O[Password Tests] --> P[Password Hashing]
-        O --> Q[Password Validation]
-        O --> R[Password Comparison]
-        
-        S[UserRole Tests] --> T[Role Validation]
-        S --> U[Admin Check]
-        S --> V[Role Equality]
-    end
-    
-    subgraph "Entity Tests"
-        W[User Tests] --> X[User Creation]
-        W --> Y[User Properties]
-        W --> Z[User Methods]
-    end
-    
-    subgraph "Model Tests"
-        AA[Mongoose Tests] --> AB[Document Creation]
-        AA --> AC[Validation]
-        AA --> AD[Timestamps]
-    end
-    
-    subgraph "Error Tests"
-        AE[Error Tests] --> AF[Error Inheritance]
-        AE --> AG[Error Messages]
-        AE --> AH[Error Properties]
-    end
-```
+Test Suites: 48 passed, 48 total
+Tests:       355 passed, 355 total
+Snapshots:   0 total
+Time:        7.086 s
 
 ### Test Execution Flow
 
@@ -312,6 +500,106 @@ The test environment uses:
 - Mocked Redis connections
 - Mocked external services
 - Environment variables from `.env.test` (if present) or `.env`
+
+### Test Coverage Report
+
+| File                             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s        |
+|----------------------------------|---------|----------|---------|---------|--------------------------|
+| All files                        |   73.27 |    65.83 |   75.86 |    73.6 |                          |
+| domain/entities                  |   96.47 |    88.88 |     100 |     100 |                          |
+|  AgeBasedDosage.ts               |     100 |      100 |     100 |     100 |                          |
+|  AgeGroups.ts                    |   89.65 |    86.36 |     100 |     100 | 19,23-30                 |
+|  Dosage.ts                       |     100 |      100 |     100 |     100 |                          |
+|  Drug.ts                         |     100 |      100 |     100 |     100 |                          |
+|  Indication.ts                   |     100 |      100 |     100 |     100 |                          |
+|  User.ts                         |     100 |      100 |     100 |     100 |                          |
+|  WeightBasedDosage.ts            |     100 |      100 |     100 |     100 |                          |
+| domain/errors                    |     100 |      100 |     100 |     100 |                          |
+|  DomainError.ts                  |     100 |      100 |     100 |     100 |                          |
+|  DosageNotFoundError.ts          |     100 |      100 |     100 |     100 |                          |
+|  DrugNotFoundError.ts            |     100 |      100 |     100 |     100 |                          |
+|  EmptyConditionError.ts          |     100 |      100 |     100 |     100 |                          |
+|  EmptyDosageListError.ts         |     100 |      100 |     100 |     100 |                          |
+|  EmptyDrugNameError.ts           |     100 |      100 |     100 |     100 |                          |
+|  InvalidAgeRangeError.ts         |     100 |      100 |     100 |     100 |                          |
+|  InvalidCredentialsError.ts      |     100 |      100 |     100 |     100 |                          |
+|  InvalidDosageError.ts           |     100 |      100 |     100 |     100 |                          |
+|  InvalidUUIDError.ts             |     100 |      100 |     100 |     100 |                          |
+|  InvalidWeightRangeError.ts      |     100 |      100 |     100 |     100 |                          |
+|  ShortConditionError.ts          |     100 |      100 |     100 |     100 |                          |
+|  UserAlreadyExistsError.ts       |     100 |      100 |     100 |     100 |                          |
+|  index.ts                        |     100 |      100 |     100 |     100 |                          |
+| domain/use-cases                 |     100 |      100 |     100 |     100 |                          |
+|  CreateDrugUseCase.ts            |     100 |      100 |     100 |     100 |                          |
+|  DeleteDrugUseCase.ts            |     100 |      100 |     100 |     100 |                          |
+|  GetDrugUseCase.ts               |     100 |      100 |     100 |     100 |                          |
+|  UpdateDrugUseCase.ts            |     100 |      100 |     100 |     100 |                          |
+| domain/value-objects             |     100 |      100 |     100 |     100 |                          |
+|  AgeRange.ts                     |     100 |      100 |     100 |     100 |                          |
+|  Condition.ts                    |     100 |      100 |     100 |     100 |                          |
+|  Description.ts                  |     100 |      100 |     100 |     100 |                          |
+|  DosageValue.ts                  |     100 |      100 |     100 |     100 |                          |
+|  DrugName.ts                     |     100 |      100 |     100 |     100 |                          |
+|  Email.ts                        |     100 |      100 |     100 |     100 |                          |
+|  IdentificationCode.ts           |     100 |      100 |     100 |     100 |                          |
+|  IndicationCode.ts               |     100 |      100 |     100 |     100 |                          |
+|  Password.ts                     |     100 |      100 |     100 |     100 |                          |
+|  UserName.ts                     |     100 |      100 |     100 |     100 |                          |
+|  UserRole.ts                     |     100 |      100 |     100 |     100 |                          |
+|  WeightRange.ts                  |     100 |      100 |     100 |     100 |                          |
+| infra/cache                      |     100 |      100 |     100 |     100 |                          |
+|  RedisCacheService.ts            |     100 |      100 |     100 |     100 |                          |
+| infra/config                     |   95.34 |       60 |   71.42 |   94.44 |                          |
+|  database.ts                     |     100 |      100 |     100 |     100 |                          |
+|  queue.ts                        |     100 |      100 |     100 |     100 |                          |
+|  redis.ts                        |      80 |    33.33 |   33.33 |   71.42 | 10,16                    |
+| infra/http                       |     100 |      100 |     100 |     100 |                          |
+|  httpClient.ts                   |     100 |      100 |     100 |     100 |                          |
+| infra/mappers                    |     100 |       75 |     100 |     100 |                          |
+|  DrugMapper.ts                   |     100 |       75 |     100 |     100 | 50                       |
+| infra/middleware                 |       0 |        0 |       0 |       0 |                          |
+|  authMiddleware.ts               |       0 |        0 |       0 |       0 | 12-57                    |
+| infra/models                     |     100 |      100 |     100 |     100 |                          |
+|  DrugModel.ts                    |     100 |      100 |     100 |     100 |                          |
+|  UserModel.ts                    |     100 |      100 |     100 |     100 |                          |
+| infra/queue                      |      95 |      100 |      50 |      95 |                          |
+|  bull-board.ts                   |      95 |      100 |      50 |      95 | 30                       |
+| infra/queue/processors           |   84.37 |       25 |      50 |   84.37 |                          |
+|  aiConsultationProcessor.ts      |      88 |       25 |      60 |      88 | 78,98-100                |
+|  dailyMedProcessor.ts            |   71.42 |      100 |   33.33 |   71.42 | 21-25                    |
+| infra/queue/workers              |       0 |      100 |       0 |       0 |                          |
+|  dailyMedWorker.ts               |       0 |      100 |       0 |       0 | 1-20                     |
+| infra/repositories/mongoose      |   51.72 |       75 |   55.55 |   53.57 |                          |
+|  DrugRepository.ts               |     100 |      100 |     100 |     100 |                          |
+|  UserRepository.ts               |       0 |        0 |       0 |       0 | 1-44                     |
+| infra/services                   |   36.84 |    19.04 |   19.35 |   36.84 |                          |
+|  AIConsultationQueueService.ts   |   27.77 |        0 |       0 |   27.77 | 14-42                    |
+|  AIConsultationService.ts        |   11.11 |      100 |       0 |   11.11 | 11-75                    |
+|  AuthService.ts                  |       0 |        0 |       0 |       0 | 2-107                    |
+|  DailyMedQueueService.ts         |   46.15 |        0 |   33.33 |   46.15 | 42-45,53-56,64-65,73-114 |
+|  DailyMedService.ts              |   44.44 |      100 |       0 |   44.44 | 11-24                    |
+|  JWTService.ts                   |       0 |        0 |       0 |       0 | 1-32                     |
+|  dailyMedApi.ts                  |     100 |       80 |     100 |     100 | 36                       |
+| infra/workers                    |     100 |      100 |     100 |     100 |                          |
+|  aiConsultationWorker.ts         |     100 |      100 |     100 |     100 |                          |
+| presentation/api                 |   89.28 |    33.33 |     100 |   89.28 |                          |
+|  app.ts                          |     100 |      100 |     100 |     100 |                          |
+|  server.ts                       |   78.57 |    33.33 |     100 |   78.57 | 15-16,22                 |
+| presentation/api/config          |     100 |      100 |     100 |     100 |                          |
+|  swagger.ts                      |     100 |      100 |     100 |     100 |                          |
+| presentation/api/controllers     |   61.79 |        0 |    62.5 |   61.79 |                          |
+|  AuthController.ts               |       0 |        0 |       0 |       0 | 3-93                     |
+|  DrugController.ts               |     100 |      100 |     100 |     100 |                          |
+|  DrugCreateController.ts         |     100 |      100 |     100 |     100 |                          |
+| presentation/api/middleware      |   65.78 |    22.22 |   71.42 |   67.64 |                          |
+|  errorHandler.ts                 |       0 |        0 |       0 |       0 | 2-33                     |
+|  validation.ts                   |   96.15 |      100 |     100 |   95.83 | 57                       |
+| presentation/api/routes          |       0 |      100 |       0 |       0 |                          |
+|  authRoutes.ts                   |       0 |      100 |       0 |       0 | 1-124                    |
+| presentation/api/validations     |   95.83 |      100 |     100 |   95.45 |                          |
+|  drugValidation.ts               |   95.83 |      100 |     100 |   95.45 | 42                       |
+| tests                            |       0 |      100 |       0 |       0 |                          |
+|  setup.ts                        |       0 |      100 |       0 |       0 | 2-24                     |
 
 ## API Documentation
 
