@@ -9,39 +9,15 @@ const IdentificationCodeSchema = z.string().regex(/^[A-Z0-9-]+$/, 'Invalid ident
 // Entities
 const IndicationSchema = z.object({
   code: z.string().regex(/^\d+\.\d+$/, 'Invalid indication code format'),
-  condition: z.string().min(1, 'Condition is required'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  limitations: z.string().nullable()
-});
-
-const DosageAgeGroupSchema = z.object({
-  initialDosage: z.string().nullable(),
-  subsequentDosage: z.string().nullable(),
-  '200 mg': z.string().nullable(),
-  '15_to_30_kg': z.string().nullable(),
-  '30_kg_and_above': z.string().nullable(),
-  '30_to_60_kg': z.object({
-    initialLoadingDose: z.string(),
-    subsequentDosage: z.string()
-  }).nullable(),
-  '60_kg_and_above': z.object({
-    initialLoadingDose: z.string(),
-    subsequentDosage: z.string()
-  }).nullable()
+  description: z.string().min(10, 'Description must be at least 10 characters')
 });
 
 const DosageSchema = z.object({
-  importantAdministrationInstructions: z.array(z.string()),
-  ageGroups: z.object({
-    adults: DosageAgeGroupSchema,
-    pediatric_6_months_to_5_years: DosageAgeGroupSchema,
-    pediatric_6_to_11_years: DosageAgeGroupSchema,
-    pediatric_12_to_17_years: DosageAgeGroupSchema
-  })
+  value: z.string().min(1, 'Dosage value is required'),
+  unit: z.enum(['mg', 'g'], { errorMap: () => ({ message: 'Unit must be mg or g' }) })
 });
 
-// Main Schema
-const DrugInfoSchema = z.object({
+export const DrugInfoSchema = z.object({
   name: DrugNameSchema,
   identificationCode: IdentificationCodeSchema,
   indications: z.array(IndicationSchema),
@@ -59,14 +35,15 @@ export class AIConsultationProcessor {
 
   constructor() {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      //apiKey: process.env.OPENAI_API_KEY
+      apiKey: "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"
     });
   }
 
   async extractDrugInfo(text: string): Promise<DrugInfo> {
     try {
       const response = await this.openai.responses.parse({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o',
         input: [
           {
             role: 'system',
@@ -74,17 +51,17 @@ export class AIConsultationProcessor {
             Extract structured information about drug from the provided text.
             Focus on extracting:
             1. Drug name (required, must be a valid string)
-            2. Identification code (required, must be in format: uppercase letters, numbers, and hyphens only)
+            2. Identification code (is the setId from DailyMed)
             3. Indications with:
-               - Code (required, must be in format: number.number, e.g., 1.1)
-               - Condition (required, must be a non-empty string)
+               - Code (required, must be in format: number.number, e.g., 1.1, using ICD-10)
                - Description (required, must be at least 10 characters)
-               - Limitations (optional)
-            4. Dosage information including:
-               - Important administration instructions
-               - Age-specific dosage for adults and different pediatric groups
+            4. Dosage information:
+               - Value (required, must include the number and unit(mg or g), e.g., "300 mg")
+               - Unit (must be either "mg" or "g")
+            Use ICD-10 codes for diagnosis and procedure codes for procedures.
             Only include information that is explicitly stated in the text.
-            Format the output according to the provided schema.`
+            Format the output according to the provided schema.
+            For dosage, extract the most common or primary dosage value.`
           },
           {
             role: 'user',
@@ -97,6 +74,7 @@ export class AIConsultationProcessor {
       });
 
       const parsed = response.output_parsed;
+      console.log(parsed);
       if (!parsed) {
         throw new Error('Empty AI response');
       }

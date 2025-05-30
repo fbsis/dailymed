@@ -1,4 +1,4 @@
-import { Drug } from '../entities/Drug';
+import { DrugInfo } from '@/infra/services/dailyMedApi';
 
 export interface IDailyMedService {
   /**
@@ -13,5 +13,5 @@ export interface IDailyMedService {
    * @param setId The DailyMed setId of the drug
    * @returns The extracted drug information
    */
-  extractDrugInfo(setId: string): Promise<Drug>;
+  extractDrugInfo(setId: string): Promise<DrugInfo>;
 } 

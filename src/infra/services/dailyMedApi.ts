@@ -1,4 +1,5 @@
-import { HttpClient } from '../http/httpClient';
+import { AxiosHttpClient, HttpClient } from '../http/httpClient';
+import Redis from 'ioredis';
 import { createRedisClient } from '../config/redis';
 
 interface DailyMedSearchResponse {
@@ -29,9 +30,12 @@ export interface DrugInfo {
 
 export class DailyMedApiService {
   private readonly baseUrl = 'https://dailymed.nlm.nih.gov/dailymed/services/v2';
-  private readonly redisClient = createRedisClient();
+  private readonly redis: Redis;
+  private readonly CACHE_TTL = 60 * 60; // 1 hour in seconds
 
-  constructor(private readonly httpClient: HttpClient) {}
+  constructor(private readonly httpClient: HttpClient = new AxiosHttpClient(this.baseUrl)) {
+    this.redis = createRedisClient();
+  }
 
   async checkDrugExists(drugName: string): Promise<{ setId: string | null }> {
     try {
@@ -57,29 +61,28 @@ export class DailyMedApiService {
   async extractDrugInfo(setId: string): Promise<DrugInfo> {
     try {
       // Try to get from cache first
-      const cachedData = await this.redisClient.get(setId);
+      const cachedData = await this.redis.get(setId);
       if (cachedData) {
         return JSON.parse(cachedData);
       }
 
       // If not in cache, fetch from API
       const response = await this.httpClient.get<string>(
-        `https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm`,
-        {
-          params: {
-            setid: setId,
-            type: 'display'
-          }
-        }
+        `https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=${setId}&type=display`,
       );
 
+      // remove all html tags from response
+      let html = response.replace(/<[^>]*>?/g, '');
+      html = html.replace(/\s+/g, ' ').trim();
+      html = html.replace(/\n\s*\n/g, '\n');
+
       const drugInfo: DrugInfo = {
-        html: response,
+        html: html,
         lastUpdated: new Date().toISOString()
       };
 
-      // Store in cache permanently (no expiration)
-      await this.redisClient.set(setId, JSON.stringify(drugInfo));
+      // Cache the result
+      await this.redis.setex(setId, this.CACHE_TTL, JSON.stringify(drugInfo));
 
       return drugInfo;
     } catch (error) {

@@ -4,6 +4,7 @@ import { IDailyMedService } from '../protocols/IDailyMedService';
 import { IAIConsultationService } from '../protocols/IAIConsultationService';
 import { ICacheService } from '../protocols/ICacheService';
 import { DrugNotFoundError } from '../errors/DrugNotFoundError';
+import { DrugName } from '../value-objects/DrugName';
 
 export class CreateDrugUseCase {
   constructor(
@@ -13,15 +14,15 @@ export class CreateDrugUseCase {
     private readonly cacheService: ICacheService
   ) {}
 
-  async execute(drugName: string): Promise<Drug> {
+  async execute(drugName: DrugName): Promise<Drug> {
     // Check if drug exists in DailyMed
-    const setId = await this.dailyMedService.checkDrugExists(drugName);
+    const setId = await this.dailyMedService.checkDrugExists(drugName.getValue());
     if (!setId) {
-      throw new DrugNotFoundError(drugName);
+      throw new DrugNotFoundError(drugName.getValue());
     }
 
     // Check if drug already exists in database
-    const existingDrug = await this.drugRepository.findByName(drugName);
+    const existingDrug = await this.drugRepository.findByName(drugName.getValue());
     if (existingDrug) {
       return existingDrug;
     }
@@ -30,16 +31,8 @@ export class CreateDrugUseCase {
     const extractedDrug = await this.dailyMedService.extractDrugInfo(setId);
 
     // Validate indications with AI
-    const validatedIndications = await this.aiConsultationService.validateIndications(
-      extractedDrug.getIndications()
-    );
-
-    // Create final drug with validated indications
-    const drug = new Drug(
-      extractedDrug.getName(),
-      extractedDrug.getIdentificationCode(),
-      validatedIndications,
-      extractedDrug.getDosage()
+    const drug = await this.aiConsultationService.validateIndications(
+      extractedDrug.html
     );
 
     // Save to database and cache

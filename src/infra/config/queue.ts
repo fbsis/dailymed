@@ -3,6 +3,7 @@ import { createRedisClient } from './redis';
 
 export const QUEUE_NAMES = {
   DAILYMED_CHECK: 'dailymed-check',
+  DAILYMED_EXTRACT: 'dailymed-extract',
   AI_CONSULTATION: 'ai-consultation'
 } as const;
 
@@ -21,4 +22,4 @@ export const createWorker = <T, R>(
 
 // Queue instances
 export const dailyMedQueue = createQueue<{ drugName: string }>(QUEUE_NAMES.DAILYMED_CHECK);
-export const aiConsultationQueue = createQueue<{ drugName: string; indications: string[] }>(QUEUE_NAMES.AI_CONSULTATION); 
+export const aiConsultationQueue = createQueue<{ html: string }>(QUEUE_NAMES.AI_CONSULTATION); 

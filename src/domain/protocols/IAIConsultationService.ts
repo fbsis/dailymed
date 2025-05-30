@@ -1,4 +1,4 @@
-import { Indication } from '../entities/Indication';
+import { Drug } from "../entities/Drug";
 
 export interface IAIConsultationService {
   /**
@@ -6,5 +6,5 @@ export interface IAIConsultationService {
    * @param indications The list of indications to validate
    * @returns The validated and potentially enriched indications
    */
-  validateIndications(indications: Indication[]): Promise<Indication[]>;
+  validateIndications(html: string): Promise<Drug>;
 } 

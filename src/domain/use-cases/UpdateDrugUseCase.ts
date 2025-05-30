@@ -29,17 +29,9 @@ export class UpdateDrugUseCase {
     // Extract updated drug information from DailyMed
     const extractedDrug = await this.dailyMedService.extractDrugInfo(setId);
 
-    // Validate indications with AI
-    const validatedIndications = await this.aiConsultationService.validateIndications(
-      extractedDrug.getIndications()
-    );
-
-    // Create updated drug with validated indications
-    const updatedDrug = new Drug(
-      extractedDrug.getName(),
-      extractedDrug.getIdentificationCode(),
-      validatedIndications,
-      extractedDrug.getDosage()
+    // Validate and convert to Drug using AI
+    const updatedDrug = await this.aiConsultationService.validateIndications(
+      extractedDrug.html
     );
 
     // Update in database and cache

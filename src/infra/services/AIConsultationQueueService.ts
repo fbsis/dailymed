@@ -1,50 +1,57 @@
 import { IAIConsultationService } from '@/domain/protocols/IAIConsultationService';
 import { aiConsultationQueue } from '../config/queue';
 import { QueueEvents } from 'bullmq';
-import { AIConsultationResult } from '../queue/processors/aiConsultationProcessor';
+import { Queue } from 'bullmq';
+import { Drug } from '@/domain/entities/Drug';
 
 const queueEvents = new QueueEvents('ai-consultation');
 
 export class AIConsultationQueueService implements IAIConsultationService {
-  async validateIndications(indications: Indication[]): Promise<Indication[]> {
+  private queues: Map<string, Queue>;
+
+  constructor() {
+    this.queues = new Map();
+    this.initializeQueues();
+  }
+
+  private initializeQueues(): void {
+    this.queues.set(QUEUE_NAMES.AI_CONSULTATION, aiConsultationQueue);
+  }
+
+  async validateIndications(html: string): Promise<Drug> {
     const job = await aiConsultationQueue.add('validate-indications', {
-      drugName: 'current-drug',
-      indications: indications.map(i => i.getDescription().getValue())
+      html
     });
 
-    const result = await job.waitUntilFinished(queueEvents) as AIConsultationResult;
+    console.log(html);
+    throw new Error('Not implemented');
+    const result = await job.waitUntilFinished(queueEvents);
 
     if (!result || !result.validatedIndications) {
       throw new Error('Failed to validate indications with AI');
     }
 
-    return result.validatedIndications.map(desc => new Indication(
-      new IndicationCode(desc),
-      new Condition(desc),
-      new Description(desc)
-    ));
+    return result;
+  }
+
+  getQueue(name: string): Queue {
+    const queue = this.queues.get(name);
+    if (!queue) {
+      throw new Error(`Queue ${name} not found`);
+    }
+    return queue;
   }
 }
 
 // Worker implementation (this would typically be in a separate file)
 import { createWorker } from '../config/queue';
 import { QUEUE_NAMES } from '../config/queue';
-import { Indication } from '@/domain/entities/Indication';
-import { Description } from '@/domain/value-objects/Description';
-import { Condition } from '@/domain/value-objects/Condition';
-import { IndicationCode } from '@/domain/value-objects/IndicationCode';
 
 // Worker for validating indications
-createWorker<{ drugName: string; indications: string[] }, { validatedIndications: string[] }>(
+createWorker<{ html: string }, Drug>(
   QUEUE_NAMES.AI_CONSULTATION,
   async ({ data }) => {
-    // Here you would implement the actual OpenAI API call
-    // For now, we'll simulate a response
-    return {
-      validatedIndications: data.indications.filter(indication =>
-        // Simulate some basic validation
-        indication.length > 0 && indication.length <= 200
-      )
-    };
+    console.log(data);
+    throw new Error('Not implemented');
   }
 ); 
