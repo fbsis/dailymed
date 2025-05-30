@@ -16,6 +16,7 @@ createWorker<{ drugName: string }, DailyMedCheckResult>(
 createWorker<{ setId: string }, DailyMedExtractResult>(
   'extract-drug-info',
   async ({ data }) => {
-    return processor.extractDrugInfo(data.setId);
+    const drugInfo = await processor.extractDrugInfo(data.setId);
+    return { drugData: drugInfo };
   }
 ); 

@@ -6,7 +6,7 @@ export interface DailyMedCheckResult {
 }
 
 export interface DailyMedExtractResult {
-  drugData: any; // This would be properly typed based on DailyMed API response
+  drugData: DrugInfo;
 }
 
 export class DailyMedProcessor {
