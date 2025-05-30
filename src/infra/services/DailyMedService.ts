@@ -2,18 +2,14 @@ import { IDailyMedService } from '@/domain/protocols/IDailyMedService';
 import { DrugInfo, DailyMedApiService } from './dailyMedApi';
 import { DailyMedQueueService } from './DailyMedQueueService';
 import { AxiosHttpClient } from '../http/httpClient';
-import { Drug } from '@/domain/entities/Drug';
-import { AIConsultationService } from './AIConsultationService';
 
 export class DailyMedService implements IDailyMedService {
   private queueService: DailyMedQueueService;
   private apiService: DailyMedApiService;
-  private aiService: AIConsultationService;
 
   constructor() {
     this.queueService = new DailyMedQueueService();
     this.apiService = new DailyMedApiService(new AxiosHttpClient('https://dailymed.nlm.nih.gov/dailymed/services/v2'));
-    this.aiService = new AIConsultationService();
   }
 
   async checkDrugExists(drugName: string): Promise<string | null> {
@@ -23,10 +19,7 @@ export class DailyMedService implements IDailyMedService {
   async extractDrugInfo(setId: string): Promise<DrugInfo> {
     // First get the raw HTML from DailyMed API
     const drugInfo = await this.apiService.extractDrugInfo(setId);
-    
-    // Then use AI to validate and process the HTML
-    const drug = await this.aiService.validateIndications(drugInfo.html);
-    
+       
     // Return the original DrugInfo since that's what the interface expects
     return drugInfo;
   }
