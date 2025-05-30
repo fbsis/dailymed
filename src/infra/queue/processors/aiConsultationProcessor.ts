@@ -35,8 +35,7 @@ export class AIConsultationProcessor {
 
   constructor() {
     this.openai = new OpenAI({
-      //apiKey: process.env.OPENAI_API_KEY
-      apiKey: "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"
+      apiKey: process.env.OPENAI_API_KEY
     });
   }
 
