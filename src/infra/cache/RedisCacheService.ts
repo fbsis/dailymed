@@ -28,6 +28,7 @@ export class RedisCacheService implements ICacheService {
       await this.redis.setex(key, this.CACHE_TTL, JSON.stringify(data));
     } catch (error) {
       console.error('Error caching drug data:', error);
+      throw error;
     }
   }
 
@@ -37,6 +38,7 @@ export class RedisCacheService implements ICacheService {
       await this.redis.del(key);
     } catch (error) {
       console.error('Error removing drug from cache:', error);
+      throw error;
     }
   }
 } 

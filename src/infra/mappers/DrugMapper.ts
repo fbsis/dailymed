@@ -30,7 +30,7 @@ export class DrugMapper {
         new AgeBasedDosage(
           new AgeRange(0, 12, "years"),
           new Map([
-            [new WeightRange(0, 12, "kg"), new DosageValue(doc.dosage.value)],
+            [new WeightRange(1, 12, "kg"), new DosageValue(doc.dosage.value)],
           ])
         ),
       ])
@@ -45,6 +45,10 @@ export class DrugMapper {
   }
 
   static toPersistence(drug: Drug): Pick<IDrugDocument, 'name' | 'identificationCode' | 'indications' | 'dosage'> {
+    const instructions = drug.getDosage().getImportantAdministrationInstructions();
+    const dosageValue = instructions.length > 0 ? instructions[0].getValue() : '300 mg';
+    const unit = dosageValue.split(" ")[1] || 'mg';
+
     return {
       name: drug.getName().getValue(),
       identificationCode: drug.getIdentificationCode().getValue(),
@@ -53,8 +57,8 @@ export class DrugMapper {
         description: ind.getDescription().getValue(),
       })),
       dosage: {
-        value: drug.getDosage().getImportantAdministrationInstructions()[0].getValue(),
-        unit: drug.getDosage().getImportantAdministrationInstructions()[0].getValue().split(" ")[1],
+        value: dosageValue,
+        unit: unit,
       },
     };
   }
