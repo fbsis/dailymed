@@ -1,4 +1,4 @@
-import { DailyMedApiService } from '@/infra/services/dailyMedApi';
+import { DailyMedApiService, DrugInfo } from '@/infra/services/dailyMedApi';
 import { AxiosHttpClient } from '@/infra/http/httpClient';
 
 export interface DailyMedCheckResult {
@@ -21,7 +21,7 @@ export class DailyMedProcessor {
     return this.dailyMedApi.checkDrugExists(drugName);
   }
 
-  async extractDrugInfo(setId: string): Promise<DailyMedExtractResult> {
+  async extractDrugInfo(setId: string): Promise<DrugInfo> {
     return this.dailyMedApi.extractDrugInfo(setId);
   }
 } 
