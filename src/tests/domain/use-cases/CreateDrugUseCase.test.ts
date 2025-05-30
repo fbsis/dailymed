@@ -9,6 +9,7 @@ import { IdentificationCode } from '@/domain/value-objects/IdentificationCode';
 import { Indication } from '@/domain/entities/Indication';
 import { Dosage } from '@/domain/entities/Dosage';
 import { DrugNotFoundError } from '@/domain/errors/DrugNotFoundError';
+import { DrugInfo } from '@/infra/services/dailyMedApi';
 
 describe('CreateDrugUseCase', () => {
   let useCase: CreateDrugUseCase;
@@ -23,6 +24,11 @@ describe('CreateDrugUseCase', () => {
     [] as Indication[],
     {} as Dosage
   );
+
+  const mockDrugInfo: DrugInfo = {
+    html: 'Test drug information',
+    lastUpdated: new Date().toISOString()
+  };
 
   beforeEach(() => {
     mockDrugRepository = {
@@ -65,14 +71,14 @@ describe('CreateDrugUseCase', () => {
   });
 
   describe('execute', () => {
-    const drugName = 'Aspirin';
+    const drugName = new DrugName('Aspirin');
     const setId = 'set-id-123';
 
     it('should throw DrugNotFoundError when drug does not exist in DailyMed', async () => {
       mockDailyMedService.checkDrugExists.mockResolvedValue(null);
 
       await expect(useCase.execute(drugName)).rejects.toThrow(DrugNotFoundError);
-      expect(mockDailyMedService.checkDrugExists).toHaveBeenCalledWith(drugName);
+      expect(mockDailyMedService.checkDrugExists).toHaveBeenCalledWith(drugName.getValue());
       expect(mockDrugRepository.findByName).not.toHaveBeenCalled();
     });
 
@@ -83,22 +89,22 @@ describe('CreateDrugUseCase', () => {
       const result = await useCase.execute(drugName);
 
       expect(result).toBe(mockDrug);
-      expect(mockDailyMedService.checkDrugExists).toHaveBeenCalledWith(drugName);
-      expect(mockDrugRepository.findByName).toHaveBeenCalledWith(drugName);
+      expect(mockDailyMedService.checkDrugExists).toHaveBeenCalledWith(drugName.getValue());
+      expect(mockDrugRepository.findByName).toHaveBeenCalledWith(drugName.getValue());
       expect(mockDailyMedService.extractDrugInfo).not.toHaveBeenCalled();
     });
 
     it('should create new drug when not found in database', async () => {
       mockDailyMedService.checkDrugExists.mockResolvedValue(setId);
       mockDrugRepository.findByName.mockResolvedValue(null);
-      mockDailyMedService.extractDrugInfo.mockResolvedValue(mockDrug);
-      mockAIConsultationService.validateIndications.mockResolvedValue([]);
+      mockDailyMedService.extractDrugInfo.mockResolvedValue(mockDrugInfo);
+      mockAIConsultationService.validateIndications.mockResolvedValue(mockDrug);
 
       const result = await useCase.execute(drugName);
 
       expect(result).toStrictEqual(mockDrug);
-      expect(mockDailyMedService.checkDrugExists).toHaveBeenCalledWith(drugName);
-      expect(mockDrugRepository.findByName).toHaveBeenCalledWith(drugName);
+      expect(mockDailyMedService.checkDrugExists).toHaveBeenCalledWith(drugName.getValue());
+      expect(mockDrugRepository.findByName).toHaveBeenCalledWith(drugName.getValue());
       expect(mockDailyMedService.extractDrugInfo).toHaveBeenCalledWith(setId);
       expect(mockAIConsultationService.validateIndications).toHaveBeenCalled();
       expect(mockDrugRepository.save).toHaveBeenCalledWith(mockDrug);

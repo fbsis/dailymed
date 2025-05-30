@@ -9,6 +9,7 @@ import { IdentificationCode } from '@/domain/value-objects/IdentificationCode';
 import { Indication } from '@/domain/entities/Indication';
 import { Dosage } from '@/domain/entities/Dosage';
 import { DrugNotFoundError } from '@/domain/errors/DrugNotFoundError';
+import { DrugInfo } from '@/infra/services/dailyMedApi';
 
 describe('UpdateDrugUseCase', () => {
   let useCase: UpdateDrugUseCase;
@@ -23,6 +24,11 @@ describe('UpdateDrugUseCase', () => {
     [] as Indication[],
     {} as Dosage
   );
+
+  const mockDrugInfo: DrugInfo = {
+    html: 'Test drug information',
+    lastUpdated: new Date().toISOString()
+  };
 
   beforeEach(() => {
     mockDrugRepository = {
@@ -89,8 +95,8 @@ describe('UpdateDrugUseCase', () => {
     it('should update drug when found in both database and DailyMed', async () => {
       mockDrugRepository.findByName.mockResolvedValue(mockDrug);
       mockDailyMedService.checkDrugExists.mockResolvedValue(setId);
-      mockDailyMedService.extractDrugInfo.mockResolvedValue(mockDrug);
-      mockAIConsultationService.validateIndications.mockResolvedValue([]);
+      mockDailyMedService.extractDrugInfo.mockResolvedValue(Promise.resolve(mockDrugInfo));
+      mockAIConsultationService.validateIndications.mockResolvedValue(mockDrug);
 
       const result = await useCase.execute(drugName);
 

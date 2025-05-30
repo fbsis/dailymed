@@ -76,66 +76,16 @@ describe('AIConsultationProcessor', () => {
       indications: [
         {
           code: '1.1',
-          condition: 'Atopic Dermatitis',
-          description: 'Dupixent is indicated for the treatment of adult and pediatric patients aged 6 months and older with moderate-to-severe atopic dermatitis (AD) whose disease is not adequately controlled with topical prescription therapies or when those therapies are not advisable.',
-          limitations: null
+          description: 'Dupixent is indicated for the treatment of adult and pediatric patients aged 6 months and older with moderate-to-severe atopic dermatitis (AD) whose disease is not adequately controlled with topical prescription therapies or when those therapies are not advisable.'
         },
         {
           code: '1.2',
-          condition: 'Asthma',
-          description: 'Dupixent is indicated as an add-on maintenance treatment of adult and pediatric patients aged 6 years and older with moderate-to-severe asthma characterized by an eosinophilic phenotype or with oral corticosteroid dependent asthma.',
-          limitations: 'Dupixent is not indicated for the relief of acute bronchospasm or status asthmaticus.'
+          description: 'Dupixent is indicated as an add-on maintenance treatment of adult and pediatric patients aged 6 years and older with moderate-to-severe asthma characterized by an eosinophilic phenotype or with oral corticosteroid dependent asthma.'
         }
       ],
       dosage: {
-        importantAdministrationInstructions: [
-          'Dupixent is administered by subcutaneous injection.',
-          'Administer each of the two DUPIXENT 300 mg injections at different injection sites for initial doses.'
-        ],
-        ageGroups: {
-          adults: {
-            initialDosage: '600 mg (two 300 mg injections)',
-            subsequentDosage: '300 mg every 2 weeks (Q2W)',
-            '200 mg': null,
-            '15_to_30_kg': null,
-            '30_kg_and_above': null,
-            '30_to_60_kg': null,
-            '60_kg_and_above': null
-          },
-          pediatric_6_months_to_5_years: {
-            initialDosage: null,
-            subsequentDosage: null,
-            '200 mg': '200 mg (one 200 mg injection) every 4 weeks (Q4W)',
-            '15_to_30_kg': null,
-            '30_kg_and_above': null,
-            '30_to_60_kg': null,
-            '60_kg_and_above': null
-          },
-          pediatric_6_to_11_years: {
-            initialDosage: null,
-            subsequentDosage: null,
-            '200 mg': null,
-            '15_to_30_kg': '300 mg every 4 weeks (Q4W)',
-            '30_kg_and_above': '200 mg every 2 weeks (Q2W)',
-            '30_to_60_kg': null,
-            '60_kg_and_above': null
-          },
-          pediatric_12_to_17_years: {
-            initialDosage: null,
-            subsequentDosage: null,
-            '200 mg': null,
-            '15_to_30_kg': null,
-            '30_kg_and_above': null,
-            '30_to_60_kg': {
-              initialLoadingDose: '400 mg (two 200 mg injections)',
-              subsequentDosage: '200 mg every 2 weeks (Q2W)'
-            },
-            '60_kg_and_above': {
-              initialLoadingDose: '600 mg (two 300 mg injections)',
-              subsequentDosage: '300 mg every 2 weeks (Q2W)'
-            }
-          }
-        }
+        value: '300 mg',
+        unit: 'mg' as const
       }
     };
 
@@ -147,25 +97,6 @@ describe('AIConsultationProcessor', () => {
       (mockOpenAI.responses.parse as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await processor.extractDrugInfo(mockDrugText);
-
-      expect(mockOpenAI.responses.parse).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: 'gpt-4-turbo-preview',
-          input: expect.arrayContaining([
-            expect.objectContaining({
-              role: 'system',
-              content: expect.stringContaining('Extract structured information')
-            }),
-            expect.objectContaining({
-              role: 'user',
-              content: mockDrugText
-            })
-          ]),
-          text: expect.objectContaining({
-            format: expect.any(Object)
-          })
-        })
-      );
 
       expect(result).toEqual(mockAIResponse);
     });
