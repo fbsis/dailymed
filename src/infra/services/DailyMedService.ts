@@ -5,7 +5,7 @@ import { AxiosHttpClient } from '../http/httpClient';
 
 export class DailyMedService implements IDailyMedService {
   private queueService: DailyMedQueueService;
-  private apiService: DailyMedApiService;
+  apiService: DailyMedApiService;
 
   constructor() {
     this.queueService = new DailyMedQueueService();
