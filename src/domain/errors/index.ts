@@ -8,4 +8,5 @@ export * from './InvalidDosageError';
 export * from './InvalidWeightRangeError';
 export * from './InvalidAgeRangeError';
 export * from './InvalidUUIDError';
+export * from './DrugNotFoundError';
  
