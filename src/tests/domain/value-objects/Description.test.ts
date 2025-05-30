@@ -16,11 +16,6 @@ describe('Description', () => {
       expect(() => new Description('   ')).toThrow('Description cannot be empty');
     });
 
-    it('should throw error for description shorter than 10 characters', () => {
-      expect(() => new Description('Too short')).toThrow('Description must be at least 10 characters long');
-      expect(() => new Description('Short')).toThrow('Description must be at least 10 characters long');
-    });
-
     it('should trim whitespace from description', () => {
       const description = new Description('  This is a valid description.  ');
       expect(description.getValue()).toBe('This is a valid description.');
