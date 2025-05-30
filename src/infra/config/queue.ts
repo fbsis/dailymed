@@ -7,17 +7,39 @@ export const QUEUE_NAMES = {
   AI_CONSULTATION: 'ai-consultation'
 } as const;
 
+// Global queue options
+const defaultQueueOptions = {
+  connection: createRedisClient(),
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 1000 // 1 second
+    },
+    removeOnComplete: true,
+    removeOnFail: false
+  }
+};
+
+// Global worker options
+const defaultWorkerOptions = {
+  connection: createRedisClient(),
+  concurrency: 1,
+  limiter: {
+    max: 1000,
+    duration: 1000
+  }
+};
+
 export const createQueue = <T>(name: string): Queue<T> => {
-  const connection = createRedisClient();
-  return new Queue<T>(name, { connection });
+  return new Queue<T>(name, defaultQueueOptions);
 };
 
 export const createWorker = <T, R>(
   name: string,
   processor: (job: { data: T }) => Promise<R>
 ): Worker<T, R> => {
-  const connection = createRedisClient();
-  return new Worker<T, R>(name, processor, { connection });
+  return new Worker<T, R>(name, processor, defaultWorkerOptions);
 };
 
 // Queue instances
