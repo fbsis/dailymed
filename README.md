@@ -1,127 +1,362 @@
-# DailyMed - Drug Indications Mining Service
+# DailyMed API
 
-## Overview
-Technical Interview Exercise: Mining and Structuring Drug Indications from Labels
+A RESTful API for managing drug information with user authentication and role-based access control.
 
-### Objective
-Develop a microservice-based application that extracts drug indications from DailyMed drug labels, maps them to standardized medical vocabulary (ICD-10 codes), and provides a queryable API. The implementation must be in Python, Node.js, or .NET and follow enterprise-grade software principles, including:
+## System Architecture
 
-- Test-Driven Development (TDD)
-- Clean Architecture (separation of concerns, layered design)
-- High Code Quality (readability, maintainability, modularity)
-- Scalability & Performance Considerations
-- Dockerized Deployment (with docker-compose for execution)
+```mermaid
+graph TD
+    subgraph "Client Layer"
+        A[Web Client] --> B[API Gateway]
+        C[Mobile App] --> B
+        D[External Services] --> B
+    end
 
-## Requirements
+    subgraph "API Layer"
+        B --> E[Authentication]
+        B --> F[Drug Information API]
+        B --> G[User Management API]
+    end
 
-### 1. Core Features
+    subgraph "Processing Layer"
+        H[Queue Manager] --> I[Redis Queue]
+        I --> J[Worker 1]
+        I --> K[Worker 2]
+        I --> L[Worker N]
+    end
 
-#### Data Extraction
-- Scrape or parse DailyMed drug labels for Dupixent
-  - Extract relevant sections describing indications
+    subgraph "Data Collection"
+        J --> M[DailyMed Scraper]
+        K --> M
+        L --> M
+        M --> N[Raw Drug Data]
+    end
 
-#### Indication Processing & Mapping
-- Map extracted indications to ICD-10 codes using an open-source dataset
-- Handle edge cases like:
-  - Synonyms (e.g., "Hypertension" vs. "High Blood Pressure")
-  - Drugs with multiple indications
-  - Unmappable conditions
-- This should use AI/LLM to complete this step
+    subgraph "AI Processing"
+        N --> O[OpenAI Processing]
+        O --> P[ICD-10 Mapping]
+        P --> Q[Structured Data]
+    end
 
-#### Structured Data Output
-- Store structured drug-indication mappings in a database or NoSQL store
-- Make mappings queryable via an API
+    subgraph "Storage Layer"
+        Q --> R[(MongoDB)]
+        E --> S[(User DB)]
+        F --> R
+        G --> S
+    end
 
-### 2. Enterprise-Grade API
-- Develop a Web API using .NET (C#), Python (FastAPI/Flask), or Node.js (Express/NestJS)
-- Implement CRUD operations:
-  - Create, read, update, and delete drug-indication mappings
-- Authentication & Authorization
-  - Users should be able to register and log in
-  - Implement role-based access control
-- Include Swagger or Postman workspace for API testing
-- Ensure consistent data types (e.g., true/false, numbers as strings)
-- Implement validation rules for missing or ambiguous data
-- Provides an endpoint (`/programs/<program_id>`) returning structured JSON
-- Supports querying program details dynamically
+    subgraph "Caching Layer"
+        R --> T[(Redis Cache)]
+        S --> T
+    end
 
-### 3. Data & Storage Layer
-- Use a database (SQL or NoSQL) to store:
-  - Drug-indication mappings
-  - User authentication data
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style I fill:#fbb,stroke:#333,stroke-width:2px
+    style M fill:#bfb,stroke:#333,stroke-width:2px
+    style O fill:#fbf,stroke:#333,stroke-width:2px
+    style R fill:#bff,stroke:#333,stroke-width:2px
+    style T fill:#fbf,stroke:#333,stroke-width:2px
+```
 
-### 4. Business Logic Layer
-- Keep business rules independent of the API and data layers
-- Implement validation logic for incoming data
+### System Flow Description
 
-### 5. Testing & Quality
-- Follow TDD: write unit tests before implementation
-- Cover:
-  - Data extraction and processing logic
-  - API endpoints
-  - Business rules
-  - Authentication flows
-- Ensure high test coverage
+1. **Client Layer**
+   - Web clients, mobile apps, and external services interact with the API
+   - All requests go through the API Gateway for routing and rate limiting
 
-## Deliverables
+2. **API Layer**
+   - **Authentication API**: Handles user registration, login, and JWT management
+   - **Drug Information API**: Provides endpoints for drug data access
+   - **User Management API**: Manages user roles and permissions
 
-### 1. GitHub Repository containing:
-- Source code for the full project
-- Unit tests for API, business logic, and data handling
-- README.md with detailed setup and execution instructions
+3. **Processing Layer**
+   - **Queue Manager**: Distributes drug data processing tasks
+   - **Redis Queue**: Manages job distribution and worker coordination
+   - **Workers**: Multiple worker processes for parallel data processing
+     - Each worker can handle multiple tasks
+     - Auto-scaling based on queue size
 
-### 2. README.md must include:
-- Step-by-step setup for running the project
-- API documentation
-- Sample output of the system
-- Scalability considerations
-- Potential improvements & production challenges
+4. **Data Collection**
+   - **DailyMed Scraper**: Extracts drug information from DailyMed
+   - Handles rate limiting and retry logic
+   - Stores raw data for processing
 
-### 3. Dockerized Deployment
-- Project must be runnable using `docker-compose up` as the only setup step
+5. **AI Processing**
+   - **OpenAI Integration**: Processes drug indications
+   - **ICD-10 Mapping**: Maps indications to standardized codes
+   - Generates structured, queryable data
 
-### 4. Answer this short prompt:
-- How would you lead an engineering team to implement and maintain this project?
+6. **Storage Layer**
+   - **MongoDB**: Stores processed drug data and mappings
+   - **User Database**: Manages user accounts and roles
+   - Implements data validation and indexing
 
-## Evaluation Criteria
+7. **Caching Layer**
+   - **Redis Cache**: Improves response times
+   - Caches frequently accessed data
+   - Manages session data
 
-| Category | Description |
-|----------|-------------|
-| Clean Architecture | Separation of concerns, modularity, maintainability |
-| Test-Driven Development | Unit tests for API, business logic, data layer |
-| Code Quality | Readability, documentation, adherence to best practices |
-| Functionality | API correctness, data extraction accuracy, ICD-10 mapping |
-| Scalability & Design | Consideration for large-scale use, error handling |
-| Dockerization | Ability to launch project using only docker-compose up |
-| Presentation (Interview) | Clear walkthrough of code, choices, and trade-offs |
+### Scalability Features
 
-## Bonus Points
+- **Horizontal Scaling**
+  - Multiple API instances behind load balancer
+  - Worker pool auto-scaling
+  - Distributed caching
 
-### Data Enrichment
-- Implement additional rules-based logic for missing fields
+- **Performance Optimization**
+  - Asynchronous processing
+  - Data caching
+  - Connection pooling
+  - Rate limiting
 
-### Performance Optimization
-- Preprocess and cache structured data for API efficiency
-- Allow filtering results dynamically based on parameters
-- Implement rate-limiting and security best practices
+- **Reliability**
+  - Queue-based processing
+  - Retry mechanisms
+  - Error handling
+  - Data validation
 
-### Gap Analysis
-- What did we not think of?
-- What edge cases did you find?
-- What improvements would you recommend?
-- For each gap:
-  - Would you:
-    - Adapt the data model?
-    - Abstract it at the service or API layer?
-  - Why?
-  - What are the tradeoffs in performance, maintainability, or team clarity?
+- **Security**
+  - JWT authentication
+  - Role-based access control
+  - Rate limiting
+  - Input validation
 
-## Submission & Interview
+## Features
 
-1. Submit your GitHub repo link
-2. Prepare a Zoom presentation:
-   - Walk through your user story, architecture, and technical decisions
-   - Demo API functionality
-   - Answer code review questions
+- User authentication (register/login)
+- Role-based access control (admin/normal users)
+- Drug information management
+- RESTful API with Swagger documentation
+- MongoDB database integration
+- Redis caching
+- JWT authentication
+- Input validation
+- Error handling
 
-Good luck!
+## Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB (v6 or higher)
+- Redis (v7 or higher)
+- npm or yarn
+
+## Development Setup
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd dailymed
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Create a `.env` file in the root directory:
+```bash
+cp .env.example .env
+```
+
+4. Configure the environment variables in `.env`:
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/dailymed
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT
+JWT_SECRET=your-secret-key-here
+
+# OpenAI (if using AI features)
+OPENAI_API_KEY=your-openai-api-key
+```
+
+5. Start the development server:
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+The server will start at `http://localhost:3000` (or the port specified in your `.env`).
+
+## Testing
+
+### Test Flow Diagram
+
+```mermaid
+graph TD
+    A[Test Suite] --> B[describe block]
+    B --> C[beforeEach]
+    B --> D[it blocks]
+    B --> E[afterEach]
+    
+    D --> F[Individual Tests]
+    F --> G[expect assertions]
+    
+    subgraph "Test Structure"
+        H[Setup] --> I[Action]
+        I --> J[Assertion]
+    end
+    
+    subgraph "Value Object Tests"
+        K[Email Tests] --> L[Valid Email]
+        K --> M[Invalid Email]
+        K --> N[Email Equality]
+        
+        O[Password Tests] --> P[Password Hashing]
+        O --> Q[Password Validation]
+        O --> R[Password Comparison]
+        
+        S[UserRole Tests] --> T[Role Validation]
+        S --> U[Admin Check]
+        S --> V[Role Equality]
+    end
+    
+    subgraph "Entity Tests"
+        W[User Tests] --> X[User Creation]
+        W --> Y[User Properties]
+        W --> Z[User Methods]
+    end
+    
+    subgraph "Model Tests"
+        AA[Mongoose Tests] --> AB[Document Creation]
+        AA --> AC[Validation]
+        AA --> AD[Timestamps]
+    end
+    
+    subgraph "Error Tests"
+        AE[Error Tests] --> AF[Error Inheritance]
+        AE --> AG[Error Messages]
+        AE --> AH[Error Properties]
+    end
+```
+
+### Test Execution Flow
+
+1. **Test Suite Initialization**
+   - Jasmine loads all test files
+   - Sets up test environment
+   - Configures mocks and spies
+
+2. **Test Suite Execution**
+   - `beforeEach` runs before each test
+   - Individual tests execute
+   - `afterEach` runs after each test
+   - Results are collected
+
+3. **Assertion Types**
+   - Equality checks (`toBe`, `toEqual`)
+   - Truthiness checks (`toBeTruthy`, `toBeFalsy`)
+   - Exception checks (`toThrow`)
+   - Instance checks (`toBeInstanceOf`)
+   - Async checks (`async/await`)
+
+4. **Mocking Strategy**
+   - External services (Redis, OpenAI)
+   - Database operations
+   - UUID generation
+   - JWT operations
+
+### Running Tests
+
+1. Make sure MongoDB is running locally or update the `MONGODB_URI` in your `.env` file.
+
+2. Run all tests:
+```bash
+npm test
+# or
+yarn test
+```
+
+3. Run tests with coverage:
+```bash
+npm run test:coverage
+# or
+yarn test:coverage
+```
+
+4. Run tests in watch mode (useful during development):
+```bash
+npm run test:watch
+# or
+yarn test:watch
+```
+
+### Test Structure
+
+- `src/tests/infra/` - Infrastructure tests
+  - `entities/` - Entity tests
+  - `value-objects/` - Value object tests
+  - `models/` - Mongoose model tests
+  - `errors/` - Error class tests
+  - `services/` - Service tests
+  - `repositories/` - Repository tests
+  - `middleware/` - Middleware tests
+  - `controllers/` - Controller tests
+
+### Test Environment
+
+The test environment uses:
+- A separate MongoDB database (specified in `MONGODB_URI`)
+- Mocked Redis connections
+- Mocked external services
+- Environment variables from `.env.test` (if present) or `.env`
+
+## API Documentation
+
+Once the server is running, you can access the Swagger documentation at:
+```
+http://localhost:3000/api-docs
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build the project
+- `npm start` - Start production server
+- `npm test` - Run tests
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:watch` - Run tests in watch mode
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint issues
+- `npm run format` - Format code with Prettier
+
+## Project Structure
+
+```
+src/
+├── domain/           # Domain layer
+│   ├── entities/     # Domain entities
+│   ├── errors/       # Domain errors
+│   └── value-objects/# Value objects
+├── infra/           # Infrastructure layer
+│   ├── models/      # Mongoose models
+│   ├── repositories/# Repository implementations
+│   ├── services/    # External services
+│   └── middleware/  # Express middleware
+└── presentation/    # Presentation layer
+    └── api/         # API routes and controllers
+```
+
+## Contributing
+
+1. Create a new branch for your feature
+2. Make your changes
+3. Write or update tests
+4. Run tests and ensure they pass
+5. Submit a pull request
+
+## License
+
+[MIT License](LICENSE)
