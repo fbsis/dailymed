@@ -9,11 +9,24 @@ import {
 } from "../middleware/validation";
 import { DrugNotFoundError } from "@/domain/errors/DrugNotFoundError";
 import { DrugName } from "@/domain/value-objects/DrugName";
+import { authMiddleware, drugCreationMiddleware, AuthRequest } from '@/infra/middleware/authMiddleware';
+import { AuthService } from '@/infra/services/AuthService';
+import { MongooseUserRepository } from '@/infra/repositories/mongoose/UserRepository';
+import { JWTService } from '@/infra/services/JWTService';
 
 const router = Router();
 const drugRepository = new MongooseDrugRepository();
 const drugController = new DrugController(drugRepository);
 const drugCreateController = new DrugCreateController();
+const userRepository = new MongooseUserRepository();
+const jwtService = new JWTService();
+const authService = new AuthService(userRepository, jwtService);
+
+// Apply authentication middleware to all drug routes
+router.use(authMiddleware(authService));
+
+// Apply drug creation middleware to protect POST/PUT/DELETE routes
+router.use(drugCreationMiddleware);
 
 /**
  * @swagger

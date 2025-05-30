@@ -15,7 +15,39 @@ const swaggerOptions = {
       },
     ],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      },
       schemas: {
+        User: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            role: { 
+              type: "string",
+              enum: ["admin", "normal"]
+            }
+          }
+        },
+        AuthResponse: {
+          type: "object",
+          properties: {
+            token: { type: "string" },
+            user: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                email: { type: "string" },
+                role: { type: "string" }
+              }
+            }
+          }
+        },
         Drug: {
           type: "object",
           properties: {
@@ -91,6 +123,9 @@ const swaggerOptions = {
         },
       },
     },
+    security: [{
+      bearerAuth: []
+    }]
   },
   apis: ["./src/presentation/api/routes/*.ts"],
 };
