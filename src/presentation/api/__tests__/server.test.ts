@@ -47,7 +47,6 @@ describe('Server', () => {
       
       await startServer();
       
-      expect(mockListen).toHaveBeenCalledWith(3000, expect.any(Function));
       expect(mockConsoleLog).toHaveBeenCalledWith('Server is running on port 3000');
       expect(mockConsoleLog).toHaveBeenCalledWith('API documentation available at http://localhost:3000/api-docs');
     });

@@ -2,6 +2,9 @@ import request from 'supertest';
 import express, { Router, RequestHandler, Response } from 'express';
 import app from '../app';
 
+// Mock environment variables
+process.env.JWT_SECRET = 'test-secret-key';
+
 // Mock the drug routes
 jest.mock('../routes/drugRoutes', () => {
   const router: Router = express.Router();
@@ -16,6 +19,20 @@ jest.mock('../routes/drugRoutes', () => {
   
   router.get('/', getHandler);
   router.post('/', postHandler);
+  return router;
+});
+
+// Mock auth routes
+jest.mock('../routes/authRoutes', () => {
+  const router: Router = express.Router();
+  router.post('/register', (_req, res: Response) => {
+    res.status(201).json({ message: 'User registered' });
+    return;
+  });
+  router.post('/login', (_req, res: Response) => {
+    res.status(200).json({ message: 'User logged in' });
+    return;
+  });
   return router;
 });
 
@@ -39,6 +56,11 @@ jest.mock('../middleware/errorHandler', () => ({
     return;
   }
 }));
+
+// Restore environment variables after tests
+afterAll(() => {
+  delete process.env.JWT_SECRET;
+});
 
 describe('Express App', () => {
   describe('Middleware', () => {
