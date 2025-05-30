@@ -1,16 +1,15 @@
 import { Drug } from "@/domain/entities/Drug";
-import { dailyMedQueue, createQueue } from "../config/queue";
-import { DrugMapper } from "../mappers/DrugMapper";
+import { dailyMedQueue, createQueue, QUEUE_NAMES } from "../config/queue";
 import { QueueEvents } from "bullmq";
 import {
   DailyMedCheckResult,
   DailyMedExtractResult,
 } from "../queue/processors/dailyMedProcessor";
 import { createWorker } from "../config/queue";
-import { QUEUE_NAMES } from "../config/queue";
 import { DailyMedApiService } from "./dailyMedApi";
-import { AxiosHttpClient } from "../http/httpClient";
 import { Queue } from "bullmq";
+import { AIConsultationService } from "./AIConsultationService";
+import { AxiosHttpClient } from "../http/httpClient";
 
 const extractDrugInfoQueue = createQueue<{ setId: string }>(QUEUE_NAMES.DAILYMED_EXTRACT);
 const checkQueueEvents = new QueueEvents(QUEUE_NAMES.DAILYMED_CHECK);
@@ -18,15 +17,44 @@ const extractQueueEvents = new QueueEvents(QUEUE_NAMES.DAILYMED_EXTRACT);
 
 export class DailyMedQueueService {
   private queues: Map<string, Queue>;
+  private workers: any[] = [];
+  private readonly baseUrl = 'https://dailymed.nlm.nih.gov/dailymed/services/v2';
 
   constructor() {
     this.queues = new Map();
     this.initializeQueues();
+    this.initializeWorkers();
   }
 
   private initializeQueues(): void {
     this.queues.set(QUEUE_NAMES.DAILYMED_CHECK, dailyMedQueue);
     this.queues.set(QUEUE_NAMES.DAILYMED_EXTRACT, extractDrugInfoQueue);
+  }
+
+  initializeWorkers(): void {
+    // Worker for checking drug existence
+    const checkWorker = createWorker<{ drugName: string }, DailyMedCheckResult>(
+      QUEUE_NAMES.DAILYMED_CHECK,
+      async ({ data }) => {
+        const httpClient = new AxiosHttpClient(this.baseUrl);
+        const dailyMedApiService = new DailyMedApiService(httpClient);
+        const result = await dailyMedApiService.checkDrugExists(data.drugName);
+        return { setId: result.setId };
+      }
+    );
+
+    // Worker for extracting drug info
+    const extractWorker = createWorker<{ setId: string }, DailyMedExtractResult>(
+      QUEUE_NAMES.DAILYMED_EXTRACT,
+      async ({ data }) => {
+        const httpClient = new AxiosHttpClient(this.baseUrl);
+        const dailyMedApiService = new DailyMedApiService(httpClient);
+        const drugInfo = await dailyMedApiService.extractDrugInfo(data.setId);
+        return { drugData: drugInfo };
+      }
+    );
+
+    this.workers.push(checkWorker, extractWorker);
   }
 
   async checkDrugExists(drugName: string): Promise<string | null> {
@@ -52,7 +80,9 @@ export class DailyMedQueueService {
       throw new Error("Failed to extract drug info from DailyMed");
     }
 
-    return DrugMapper.toDomain(result.drugData);
+    // Use AI service to process the HTML and get structured drug data
+    const aiService = new AIConsultationService();
+    return aiService.validateIndications(result.drugData.html);
   }
 
   getQueue(name: string): Queue {
@@ -63,22 +93,3 @@ export class DailyMedQueueService {
     return queue;
   }
 }
-
-// Worker for checking drug existence
-createWorker<{ drugName: string }, DailyMedCheckResult>(
-  QUEUE_NAMES.DAILYMED_CHECK,
-  async ({ data }) => {
-    const dailyMedApiService = new DailyMedApiService(new AxiosHttpClient("https://dailymed.nlm.nih.gov/dailymed/services/v2"));
-    return dailyMedApiService.checkDrugExists(data.drugName);
-  }
-);
-
-// Worker for extracting drug info
-createWorker<{ setId: string }, DailyMedExtractResult>(
-  QUEUE_NAMES.DAILYMED_EXTRACT,
-  async ({ data }) => {
-    const dailyMedApiService = new DailyMedApiService(new AxiosHttpClient("https://dailymed.nlm.nih.gov/dailymed/services/v2"));
-    const drugInfo = await dailyMedApiService.extractDrugInfo(data.setId);
-    return { drugData: drugInfo };
-  }
-);

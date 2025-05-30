@@ -3,6 +3,7 @@ import { aiConsultationQueue } from '../config/queue';
 import { QueueEvents } from 'bullmq';
 import { Queue } from 'bullmq';
 import { Drug } from '@/domain/entities/Drug';
+import { QUEUE_NAMES } from '../config/queue';
 
 const queueEvents = new QueueEvents('ai-consultation');
 
@@ -23,7 +24,6 @@ export class AIConsultationQueueService implements IAIConsultationService {
       html
     });
 
-    console.log(html);
     throw new Error('Not implemented');
     const result = await job.waitUntilFinished(queueEvents);
 
@@ -41,17 +41,4 @@ export class AIConsultationQueueService implements IAIConsultationService {
     }
     return queue;
   }
-}
-
-// Worker implementation (this would typically be in a separate file)
-import { createWorker } from '../config/queue';
-import { QUEUE_NAMES } from '../config/queue';
-
-// Worker for validating indications
-createWorker<{ html: string }, Drug>(
-  QUEUE_NAMES.AI_CONSULTATION,
-  async ({ data }) => {
-    console.log(data);
-    throw new Error('Not implemented');
-  }
-); 
+} 
