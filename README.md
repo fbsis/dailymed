@@ -73,19 +73,126 @@ graph TD
 The diagram below illustrates the processing flow of a drug request (POST):
 
 ```mermaid
-graph TD
-    subgraph "Drug Request (POST) Processing Flow"
-        A[User] -->|POST| B[API (Drug Endpoint)]
-        B -->|Send| C[Verification Queue (DailyMed)]
-        C -->|Verify (exists?)| D{Exists?}
-        D -->|Yes| E[Obtain setId]
-        E -->|Send setId| F[DailyMed Recipe (Scrap) Page]
-        F -->|Process (scrap)| G[Processing (OpenAI)]
-        G -->|Processed| H[(Database)]
-        H -->|Return| I[Response (Return to User)]
-        D -->|No| J[Response (Error or Not Found)]
-    end
+flowchart TD
+    User[User] -->|POST Request| API[API Endpoint]
+    API -->|Send to Queue| Queue[Verification Queue]
+    Queue -->|Check Existence| Check{Exists?}
+    Check -->|Yes| GetId[Get setId]
+    GetId -->|Fetch Data| Scrap[DailyMed Scrap]
+    Scrap -->|Process Data| AI[OpenAI Processing]
+    AI -->|Save| DB[(Database)]
+    DB -->|Return Data| Response[Response to User]
+    Check -->|No| Error[Error Response]
 ```
+
+### DDD/Clean Architecture
+
+The diagram below illustrates the system's layered architecture following DDD and Clean Architecture principles:
+
+```mermaid
+flowchart TD
+    subgraph Presentation["Presentation Layer"]
+        API[API Routes]
+        Controllers[Controllers]
+        DTOs[DTOs]
+        Validators[Validators]
+        Middleware[Middleware]
+    end
+
+    subgraph Application["Application Layer"]
+        UseCases[Use Cases]
+        Services[Application Services]
+        Interfaces[Interfaces/Ports]
+    end
+
+    subgraph Domain["Domain Layer"]
+        Entities[Entities]
+        ValueObjects[Value Objects]
+        DomainServices[Domain Services]
+        DomainEvents[Domain Events]
+        Errors[Domain Errors]
+    end
+
+    subgraph Infrastructure["Infrastructure Layer"]
+        Repositories[Repositories]
+        ExternalServices[External Services]
+        Queue[Queue System]
+        Cache[Cache System]
+        DB[(Database)]
+    end
+
+    %% Presentation to Application
+    API --> Controllers
+    Controllers --> UseCases
+    DTOs --> Controllers
+    Validators --> Controllers
+    Middleware --> Controllers
+
+    %% Application to Domain
+    UseCases --> Entities
+    UseCases --> ValueObjects
+    UseCases --> DomainServices
+    UseCases --> DomainEvents
+    Services --> UseCases
+    Interfaces --> UseCases
+
+    %% Application to Infrastructure
+    UseCases --> Repositories
+    UseCases --> ExternalServices
+    UseCases --> Queue
+    UseCases --> Cache
+
+    %% Infrastructure to External
+    Repositories --> DB
+    ExternalServices --> Queue
+    Queue --> Cache
+    Cache --> DB
+
+    %% Domain Rules
+    Entities --> ValueObjects
+    DomainServices --> Entities
+    DomainEvents --> Entities
+    Errors --> Entities
+
+    style Presentation fill:#f9f,stroke:#333,stroke-width:2px
+    style Application fill:#bbf,stroke:#333,stroke-width:2px
+    style Domain fill:#bfb,stroke:#333,stroke-width:2px
+    style Infrastructure fill:#fbb,stroke:#333,stroke-width:2px
+```
+
+#### Layer Descriptions
+
+1. **Presentation Layer**
+   - Handles HTTP requests and responses
+   - Input validation and data transformation
+   - Route management and middleware
+   - API documentation (Swagger)
+
+2. **Application Layer**
+   - Orchestrates use cases
+   - Implements business workflows
+   - Manages transactions
+   - Coordinates between layers
+
+3. **Domain Layer**
+   - Contains business rules and entities
+   - Defines value objects and domain services
+   - Manages domain events
+   - Implements domain-specific validation
+
+4. **Infrastructure Layer**
+   - Implements technical capabilities
+   - Database access and caching
+   - External service integration
+   - Queue system management
+
+#### Key Principles
+
+- **Dependency Rule**: Dependencies point inward
+- **Domain Independence**: Domain layer has no external dependencies
+- **Use Case Driven**: Application layer orchestrates use cases
+- **Interface Segregation**: Layers communicate through interfaces
+- **Single Responsibility**: Each layer has a specific purpose
 
 ### System Flow Description
 
